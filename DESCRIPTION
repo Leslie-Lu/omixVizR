@@ -8,11 +8,13 @@ Description: The omixVizR package provides tools for visualizing omics data, inc
 License: MIT + file LICENSE
 URL: https://leslie-lu.github.io/
 Encoding: UTF-8
+Language: en-US
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Suggests: 
     testthat (>= 3.0.0),
-    qqman
+    qqman,
+    spelling
 Config/testthat/edition: 3
 Imports: 
     data.table,
