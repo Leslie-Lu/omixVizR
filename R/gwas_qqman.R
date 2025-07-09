@@ -4,6 +4,7 @@
 #' @param pheno_name Phenotype name.
 #' @param maf_filter Minor allele frequency filter, Default: NULL
 #' @param output_graphics Output graphics format, Default: 'png'
+#' @param save_plot Logical, whether to save plots to files. If FALSE, plots are only displayed. Default: TRUE
 #' @return Two plots: Manhattan and QQ plots.
 #' @author Zhen Lu <luzh29@mail2.sysu.edu.cn>
 #' @author Yanhong Liu <liuyh275@mail2.sysu.edu.cn>
@@ -45,7 +46,8 @@ plot_qqman = function(
   plink_assoc_file,
   pheno_name,
   maf_filter = NULL,
-  output_graphics = "png"
+  output_graphics = "png",
+  save_plot = TRUE
 ) {
   font_dir <- system.file("extdata", package = "omixVizR")
   if (!"MetroSans" %in% sysfonts::font_families()) {
@@ -188,14 +190,17 @@ plot_qqman = function(
       )
   }
 
-  output_file <- file.path(output_dir, paste0(pheno_name, "_Manhattan_plot.", output_graphics))
-  ggplot2::ggsave(
-    filename = output_file,
-    plot = plot_manhattan,
-    width = 16, height = 4, dpi = 600
-  )
-  message("Manhattan plot saved to: ", output_file)
-
+  if (save_plot) {
+    output_file <- file.path(output_dir, paste0(pheno_name, "_Manhattan_plot.", output_graphics))
+    ggplot2::ggsave(
+      filename = output_file,
+      plot = plot_manhattan,
+      width = 16, height = 4, dpi = 600
+    )
+    message("Manhattan plot saved to: ", output_file)
+  } else {
+    print(plot_manhattan)
+  }
   # QQ plot
   qqPlotData <- plotData[!is.na(P), .(P)]
   qqPlotData[, P_v2 := P]
@@ -255,11 +260,15 @@ plot_qqman = function(
     ggplot2::scale_y_continuous(expand = c(0, 0), limits = c(0, fig_ylim)) +
     ggplot2::coord_fixed()
 
-  output_file <- file.path(output_dir, paste0(pheno_name, "_QQ_plot.", output_graphics))
-  ggplot2::ggsave(
-    filename = output_file,
-    plot = plot_qq,
-    width = 8, height = 8, dpi = 600
-  )
-  message("QQ plot saved to: ", output_file)
+  if (save_plot) {
+    output_file <- file.path(output_dir, paste0(pheno_name, "_QQ_plot.", output_graphics))
+    ggplot2::ggsave(
+      filename = output_file,
+      plot = plot_qq,
+      width = 8, height = 8, dpi = 600
+    )
+    message("QQ plot saved to: ", output_file)
+  } else {
+    print(plot_qq)
+  }
 }

@@ -8,7 +8,8 @@ plot_qqman(
   plink_assoc_file,
   pheno_name,
   maf_filter = NULL,
-  output_graphics = "png"
+  output_graphics = "png",
+  save_plot = TRUE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ plot_qqman(
 \item{maf_filter}{Minor allele frequency filter, Default: NULL}
 
 \item{output_graphics}{Output graphics format, Default: 'png'}
+
+\item{save_plot}{Logical, whether to save plots to files. If FALSE, plots are only displayed. Default: TRUE}
 }
 \value{
 Two plots: Manhattan and QQ plots.
