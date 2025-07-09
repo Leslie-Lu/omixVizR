@@ -5,7 +5,7 @@
 #' @param maf_filter Minor allele frequency filter, Default: NULL
 #' @param output_graphics Output graphics format, Default: 'png'
 #' @param save_plot Logical, whether to save plots to files. If FALSE, plots are only displayed. Default: TRUE
-#' @return Two plots: Manhattan and QQ plots.
+#' @return A list containing the ggplot objects for the Manhattan and QQ plots.
 #' @author Zhen Lu <luzh29@mail2.sysu.edu.cn>
 #' @author Yanhong Liu <liuyh275@mail2.sysu.edu.cn>
 #' @author Siyang Liu <liusy99@mail.sysu.edu.cn>
@@ -198,8 +198,6 @@ plot_qqman = function(
       width = 16, height = 4, dpi = 600
     )
     message("Manhattan plot saved to: ", output_file)
-  } else {
-    plot_manhattan
   }
   # QQ plot
   qqPlotData <- plotData[!is.na(P), .(P)]
@@ -268,7 +266,7 @@ plot_qqman = function(
       width = 8, height = 8, dpi = 600
     )
     message("QQ plot saved to: ", output_file)
-  } else {
-    plot_qq
   }
+
+  return(invisible(list(manhattan_plot = plot_manhattan, qq_plot = plot_qq)))
 }

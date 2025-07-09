@@ -24,7 +24,7 @@ plot_qqman(
 \item{save_plot}{Logical, whether to save plots to files. If FALSE, plots are only displayed. Default: TRUE}
 }
 \value{
-Two plots: Manhattan and QQ plots.
+A list containing the ggplot objects for the Manhattan and QQ plots.
 }
 \description{
 Create GWAS QQ & Manhattan Plots.
