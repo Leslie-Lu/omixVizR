@@ -6,7 +6,7 @@
 \alias{omixVizR-package}
 \title{omixVizR: 'omixVizR': Omics Visualization Toolkit}
 \description{
-'omixVizR' is an R package for comprehensive visualization of multi-omics data, including genomics, transcriptomics, and proteomics. It provides user-friendly functions to generate publication-quality plots, facilitating the exploration and interpretation of complex biological datasets. The package supports integration with popular R visualization frameworks and is suitable for both exploratory data analysis and result presentation.
+Comprehensive visualization of multi-omics data, including genomics, transcriptomics, and proteomics. Provides user-friendly functions to generate publication-quality plots, facilitating the exploration and interpretation of complex biological datasets. The package supports integration with popular R visualization frameworks and is suitable for both exploratory data analysis and result presentation.
 }
 \seealso{
 Useful links:

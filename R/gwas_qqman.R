@@ -199,7 +199,7 @@ plot_qqman = function(
     )
     message("Manhattan plot saved to: ", output_file)
   } else {
-    print(plot_manhattan)
+    plot_manhattan
   }
   # QQ plot
   qqPlotData <- plotData[!is.na(P), .(P)]
@@ -269,6 +269,6 @@ plot_qqman = function(
     )
     message("QQ plot saved to: ", output_file)
   } else {
-    print(plot_qq)
+    plot_qq
   }
 }
