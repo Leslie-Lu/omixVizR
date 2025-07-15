@@ -1,11 +1,9 @@
 Package: omixVizR
-Title: 'omixVizR': Omics Visualization Toolkit
-Version: 1.0.4
+Title: A Toolkit for Omics Data Visualization
+Version: 1.0.5
 Authors@R: 
     person("Zhen", "Lu", , "luzh29@mail2.sysu.edu.cn", role = c("aut", "cre"), comment = c(ORCID = "0000-0002-3481-6310"))
-Description: Comprehensive visualization of multi-omics data, including genomics, transcriptomics, and proteomics.
-    Provides user-friendly functions to generate publication-quality plots, facilitating the exploration and interpretation of complex biological datasets.
-    The package supports integration with popular R visualization frameworks and is suitable for both exploratory data analysis and result presentation.
+Description: Provides a suite of tools for the comprehensive visualization of multi-omics data, including genomics, transcriptomics, and proteomics. Offers user-friendly functions to generate publication-quality plots, thereby facilitating the exploration and interpretation of complex biological datasets. Supports seamless integration with popular R visualization frameworks and is well-suited for both exploratory data analysis and the presentation of final results. Key formats and methods are presented in Huang, S., et al. (2024) "The Born in Guangzhou Cohort Study enables generational genetic discoveries" <doi:10.1038/s41586-023-06988-4>.
 License: MIT + file LICENSE
 URL: https://leslie-lu.github.io/
 Encoding: UTF-8
@@ -14,7 +12,6 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Suggests: 
     testthat (>= 3.0.0),
-    qqman,
     spelling
 Config/testthat/edition: 3
 Imports: 

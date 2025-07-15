@@ -12,12 +12,23 @@
 #' @details
 #' This function reads a PLINK association file and generates Manhattan and QQ plots for the GWAS results.
 #' @examples
-#' \dontrun{
-#' plot_qqman(
-#'   plink_assoc_file = "test/European_1w_standing_height.assoc.linear",
-#'   pheno_name = "Standing_height",
-#'   output_graphics = "png"
-#' )
+#' \donttest{
+#'   sample_file <- system.file("extdata", "sample_gwas.assoc.linear", package = "omixVizR")
+#'   
+#'   # Check if the file exists before running the example
+#'   if (file.exists(sample_file)) {
+#'     # Run the function with the sample data
+#'     plots <- plot_qqman(
+#'       plink_assoc_file = sample_file,
+#'       pheno_name = "SamplePheno",
+#'       save_plot = FALSE
+#'     )
+#'     # You can then access the plots like this:
+#'     # print(plots$manhattan_plot)
+#'     # print(plots$qq_plot)
+#'   } else {
+#'     message("Sample file not found, skipping example.")
+#'   }
 #' }
 #' @seealso
 #'  \href{https://CRAN.R-project.org/package=lulab.utils}{lulab.utils}
@@ -61,7 +72,7 @@ plot_qqman = function(
   showtext::showtext_auto(enable = TRUE)
   showtext::showtext_opts(dpi = 600)
 
-  output_dir = dirname(plink_assoc_file)
+  output_dir = tempdir()
   gwasresults = data.table::fread(plink_assoc_file, header = TRUE)
 
   required_cols <- c("CHR", "BP", "P")
@@ -115,9 +126,9 @@ plot_qqman = function(
   }
 
   # Manhattan plot
-  plotData <- plotData %>%
-    .[, highlight := data.table::fifelse(P <= 5e-8, "yes", "no", "no")] %>%
-    .[!is.na(SNP), ]
+  plotData <- plotData[, highlight := data.table::fifelse(P <= 5e-8, "yes", "no", "no")][
+    !is.na(SNP) & !is.na(P) & is.finite(-log10(P)),
+  ]
 
   find_empty_y <- function(y, binwidth = 0.25, min_empty_bins = 3) {
     rng <- range(y, na.rm = TRUE)
@@ -147,10 +158,12 @@ plot_qqman = function(
         pretty_breaks[pretty_breaks < fig_ylim]
       }
     ) +
-    ggplot2::geom_point(data = plotData[highlight == "yes", ], ggplot2::aes(x = xaxis, y = -log10(P), color = "#DC0000FF"), size = 0.5) +
+    ggplot2::geom_point(data = plotData[highlight == "yes", ], ggplot2::aes(x = xaxis, y = -log10(P)), color = "#D55E00", size = 0.5) +
     ggrepel::geom_text_repel(
       data = plotData[highlight == "yes", ],
-      ggplot2::aes(x = xaxis, y = -log10(P), color = "#DC0000FF", label = SNP), size = 6, nudge_y = 1.0, fontface = "italic"
+      ggplot2::aes(x = xaxis, y = -log10(P), label = SNP), color = "#D55E00", size = 6, nudge_y = 1.0, fontface = "italic",
+      max.overlaps = 20,
+      segment.color = "#D55E00" # #009E73
     ) +
     ggplot2::scale_color_manual(values = rep(c("#3B5488", "#53BBD5"), 12)) +
     ggplot2::theme_classic(base_size = 25) +
@@ -200,7 +213,7 @@ plot_qqman = function(
     message("Manhattan plot saved to: ", output_file)
   }
   # QQ plot
-  qqPlotData <- plotData[!is.na(P), .(P)]
+  qqPlotData <- plotData[, .(P)]
   qqPlotData[, P_v2 := P]
   qqPlotData[, y := -log10(P_v2)]
   data.table::setorder(qqPlotData, -y)

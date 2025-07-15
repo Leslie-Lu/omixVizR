@@ -6,8 +6,13 @@ Omics
 PLINK
 Siyang
 Yanhong
+al
 cn
+doi
+dontrun
+donttest
 edu
+et
 extdata
 ggplot
 liusy
@@ -20,5 +25,6 @@ png
 proteomics
 qqman
 sysu
+tempdir
 transcriptomics
 ️

@@ -42,12 +42,23 @@ The font files are included in the package's inst/extdata directory and are auto
 }
 
 \examples{
-\dontrun{
-plot_qqman(
-  plink_assoc_file = "test/European_1w_standing_height.assoc.linear",
-  pheno_name = "Standing_height",
-  output_graphics = "png"
-)
+\donttest{
+  sample_file <- system.file("extdata", "sample_gwas.assoc.linear", package = "omixVizR")
+  
+  # Check if the file exists before running the example
+  if (file.exists(sample_file)) {
+    # Run the function with the sample data
+    plots <- plot_qqman(
+      plink_assoc_file = sample_file,
+      pheno_name = "SamplePheno",
+      save_plot = FALSE
+    )
+    # You can then access the plots like this:
+    # print(plots$manhattan_plot)
+    # print(plots$qq_plot)
+  } else {
+    message("Sample file not found, skipping example.")
+  }
 }
 }
 \seealso{
