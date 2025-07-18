@@ -1,0 +1,209 @@
+#' @title Plot GWAS Statistical Power
+#' @description
+#' Generates a statistical power analysis plot for a given range of odds ratios
+#' and minor allele frequencies in a case-control GWAS study. This function uses
+#' the 'genpwr' package for calculations and creates a highly customized ggplot.
+#'
+#' @param n_cases Number of cases in the study.
+#' @param n_controls Number of controls in the study.
+#' @param maf_levels A numeric vector of Minor Allele Frequencies (MAFs) to test.
+#'   Default: `c(0.01, 0.02, 0.05, 0.10, 0.20, 0.50)`.
+#' @param or_range A numeric vector specifying the sequence of Odds Ratios (ORs) to test.
+#'   Default: `seq(1.01, 2.00, 0.01)`.
+#' @param alpha The significance level (alpha) for the power calculation.
+#'   Default: `5e-8`.
+#' @param plot_title A string for the plot title. Can include newlines (`\\n`).
+#'   Default: A title generated from case/control numbers.
+#' @param save_plot Logical, whether to save the plot to a file. If `FALSE`, the
+#'   plot object is only returned. Default: `TRUE`.
+#' @param output_graphics The file format for saving the plot. Currently supports
+#'   "png" and "pdf". Default: "png".
+#' @param width The width of the saved plot in inches. Default: 17.
+#' @param height The height of the saved plot in inches. Default: 9.
+#' @param dpi The resolution of the saved plot in dots per inch. Default: 600.
+#'
+#' @return A list containing two elements:
+#'   \item{plot}{The ggplot object for the power plot.}
+#'   \item{power_data}{A data.table containing the full results from the power analysis.}
+#'
+#' @author Zhen Lu <luzh29@mail2.sysu.edu.cn>
+#'
+#' @details
+#' This function automates the process of calculating and visualizing GWAS power.
+#' It highlights the minimum OR required to achieve 80% power for the lowest and
+#' third-lowest MAF levels, adding dashed lines and color-coded labels for clarity.
+#'
+#' @examples
+#' \donttest{
+#'   # Run the power analysis and generate the plot
+#'   power_results <- plot_gwas_power_bt(
+#'     n_cases = 4324,
+#'     n_controls = 93945,
+#'     save_plot = FALSE
+#'   )
+#'
+#'   # The plot is saved to tmp_file, and you can also access the ggplot object
+#'   # print(power_results$plot)
+#'   # print(power_results$power_data)
+#' }
+#'
+#' @rdname plot_gwas_power_bt
+#' @export
+#' @importFrom data.table as.data.table
+#' @importFrom genpwr genpwr.calc
+#' @importFrom ggplot2 ggplot aes geom_line scale_color_manual expand_limits
+#'   scale_x_continuous scale_y_continuous labs theme_classic geom_hline
+#'   geom_segment theme ggsave margin expansion
+#' @importFrom ggtext element_markdown
+#' @importFrom ggsci pal_npg
+#' @importFrom showtext showtext_auto showtext_opts
+#' @importFrom sysfonts font_add
+#' @importFrom scales label_number
+#' @importFrom dplyr filter arrange case_when if_else
+#' @importFrom magrittr %>% %<>%
+#' @importFrom utils head
+#' @importFrom stats setNames
+#' @section Font Information:
+#' The MetroSans font included in this package is sourced from
+#' \url{https://fontshub.pro/font/metro-sans-download#google_vignette}.
+#' It is intended for academic research and non-commercial use only. For commercial use, please contact the font copyright holder.
+#'
+#' The font files are included in the package's inst/extdata directory and are automatically loaded for plotting.
+#'
+plot_gwas_power_bt <- function(
+  n_cases,
+  n_controls,
+  maf_levels = c(0.01, 0.02, 0.05, 0.10, 0.20, 0.50),
+  or_range = seq(1.01, 2.00, 0.01),
+  alpha = 5e-8,
+  plot_title = NULL,
+  save_plot = TRUE,
+  output_graphics = "png",
+  width = 17,
+  height = 9,
+  dpi = 600
+) {
+
+  # --- 1. Setup: Fonts and Colors ---
+  font_dir <- system.file("extdata", package = "omixVizR")
+  if (!"MetroSans" %in% sysfonts::font_families()) {
+    sysfonts::font_add(
+      family = "MetroSans",
+      regular = file.path(font_dir, "MetroSans-Regular.ttf"),
+      bold = file.path(font_dir, "MetroSans-Bold.ttf"),
+      bolditalic = file.path(font_dir, "MetroSans-BoldItalic.ttf")
+    )
+  }
+  showtext::showtext_auto(enable = TRUE)
+  showtext::showtext_opts(dpi = 600)
+
+  output_dir = tempdir()
+  output_file <- file.path(output_dir, paste0("gwas_power_plot.", output_graphics))
+
+  plot_colors <- ggsci::pal_npg("nrc")(length(maf_levels))
+
+  # --- 2. Power Calculation ---
+  total_n <- n_cases + n_controls
+  case_rate <- n_cases / total_n
+
+  power_data <- genpwr::genpwr.calc(
+    calc = "power", model = "logistic", ge.interaction = NULL,
+    N = total_n, Case.Rate = case_rate, k=NULL,
+    MAF = maf_levels, OR = or_range,
+    Alpha = alpha,
+    True.Model = "Additive", Test.Model = "Additive"
+  )
+
+  # --- 3. Data Preparation for Plotting ---
+  maf_labels <- paste("MAF =", format(maf_levels))
+  power_data$MAF %<>% factor(levels = maf_levels, labels = maf_labels)
+
+  # --- 4. Dynamic Calculation for Annotations ---
+  # Find minimum OR for 80% power at specific MAFs for annotations
+  min_or_maf1 <- power_data %>%
+    dplyr::filter(`Power_at_Alpha_5e-08` >= 0.80) %>%
+    dplyr::arrange(MAF, OR) %>%
+    utils::head(1)
+  min_or_maf3 <- power_data %>%
+    dplyr::filter(`Power_at_Alpha_5e-08` >= 0.80, MAF == maf_labels[3]) %>%
+    dplyr::arrange(OR) %>%
+    utils::head(1)
+
+  # --- 5. Create Plot ---
+  # Set default title if not provided
+  if (is.null(plot_title)) {
+    plot_title <- sprintf(
+      "Cases / Controls = %s / %s\nGWAS Significance Level = %s",
+      format(n_cases, big.mark = ","),
+      format(n_controls, big.mark = ","),
+      format(alpha, scientific = TRUE)
+    )
+  }
+
+  # Define dynamic breaks and labels for the x-axis
+  x_breaks <- sort(unique(c(seq(1.0, 2.0, 0.2), min_or_maf3$OR, min_or_maf1$OR)))
+  x_labels <- function(x) {
+    dplyr::case_when(
+      x == min_or_maf3$OR ~ paste0("<span style='color:", plot_colors[3], "'>", sprintf("%.2f", x), "</span>"),
+      x == min_or_maf1$OR ~ paste0("<span style='color:", plot_colors[1], "'>", sprintf("%.2f", x), "</span>"),
+      TRUE ~ paste0("<span style='color:black'>", scales::label_number(accuracy = 0.01)(x), "</span>")
+    )
+  }
+
+  p <- ggplot2::ggplot(power_data, ggplot2::aes(x = OR, y = `Power_at_Alpha_5e-08`)) +
+    ggplot2::geom_line(ggplot2::aes(color = MAF), linewidth = 1.28) +
+    ggplot2::scale_color_manual(
+      values = stats::setNames(plot_colors, levels(power_data$MAF)),
+      name = "Minor Allele Frequency (MAF)",
+      guide = ggplot2::guide_legend(override.aes = list(linewidth = 2.8))
+    ) +
+    ggplot2::expand_limits(x = c(1.00, 2.00), y = c(0, 1)) +
+    ggplot2::scale_x_continuous(breaks = x_breaks, labels = x_labels) +
+    ggplot2::scale_y_continuous(
+      breaks = seq(0, 1.0, 0.2),
+      expand = ggplot2::expansion(mult = c(0, 0.08), add = c(0, 0)),
+      labels = function(x) dplyr::if_else(x == 0, "0", sprintf("%.2f", x))
+    ) +
+    ggplot2::labs(
+      x = "Odds Ratio (OR)",
+      y = "GWAS Statistical Power",
+      title = plot_title
+    ) +
+    ggplot2::theme_classic() +
+    ggplot2::geom_hline(yintercept = 0.80, linewidth = 0.88, linetype = "dashed") +
+    # Dashed lines for specific ORs
+    ggplot2::geom_segment(
+      data = min_or_maf3,
+      ggplot2::aes(x = OR, xend = OR, y = 0, yend = 0.80),
+      linewidth = 0.88, linetype = "dashed", color = plot_colors[3]
+    ) +
+    ggplot2::geom_segment(
+      data = min_or_maf1,
+      ggplot2::aes(x = OR, xend = OR, y = 0, yend = 0.80),
+      linewidth = 0.88, linetype = "dashed", color = plot_colors[1]
+    ) +
+    ggplot2::theme(
+      text = ggplot2::element_text(family = "MetroSans", size = 21),
+      axis.title = ggplot2::element_text(face = "bold"),
+      axis.text.y = ggplot2::element_text(size = 18, colour = "black"),
+      axis.text.x = ggtext::element_markdown(size = 18),
+      legend.position = "inside",
+      legend.position.inside = c(0.88, 0.40),
+      plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 24, vjust = -0.8),
+      plot.title.position = "plot",
+      plot.margin = ggplot2::margin(t = 15, r = 10, b = 10, l = 10, unit = "pt")
+    )
+
+  # --- 6. Save Plot (if requested) ---
+  if (save_plot) {
+    ggplot2::ggsave(
+      filename = output_file,
+      plot = p,
+      width = width, height = height, dpi = dpi
+    )
+    message("GWAS power plot saved to: ", output_file)
+  }
+
+  # --- 7. Return Results ---
+  return(invisible(list(plot = p, power_data = data.table::as.data.table(power_data))))
+}

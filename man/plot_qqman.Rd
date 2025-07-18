@@ -2,7 +2,7 @@
 % Please edit documentation in R/gwas_qqman.R
 \name{plot_qqman}
 \alias{plot_qqman}
-\title{plot_qqman}
+\title{Plot GWAS QQ and Manhattan Plots}
 \usage{
 plot_qqman(
   plink_assoc_file,
