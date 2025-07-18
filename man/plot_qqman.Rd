@@ -9,7 +9,9 @@ plot_qqman(
   pheno_name,
   maf_filter = NULL,
   output_graphics = "png",
-  save_plot = TRUE
+  save_plot = TRUE,
+  lambda1_qq_pos = c(2.1, -5.5),
+  lambda2_qq_pos = c(1.565, -4)
 )
 }
 \arguments{
@@ -22,6 +24,10 @@ plot_qqman(
 \item{output_graphics}{Output graphics format, Default: 'png'}
 
 \item{save_plot}{Logical, whether to save plots to files. If FALSE, plots are only displayed. Default: TRUE}
+
+\item{lambda1_qq_pos}{A numeric vector of length 2 specifying the \code{c(hjust, vjust)} for the lambda (λ) text in the QQ plot. Default: \code{c(2.1, -5.5)}.}
+
+\item{lambda2_qq_pos}{A numeric vector of length 2 specifying the \code{c(hjust, vjust)} for the SNP count (N) text in the QQ plot. Default: \code{c(1.565, -4.0)}.}
 }
 \value{
 A list containing the ggplot objects for the Manhattan and QQ plots.

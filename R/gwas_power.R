@@ -1,15 +1,21 @@
 #' @title Plot GWAS Statistical Power
 #' @description
-#' Generates a statistical power analysis plot for a given range of odds ratios
-#' and minor allele frequencies in a case-control GWAS study. This function uses
-#' the 'genpwr' package for calculations and creates a highly customized ggplot.
+#' Generates a statistical power analysis plot for GWAS studies.
+#' Supports binary (case-control) traits over a range of odds ratios and minor allele frequencies,
+#' and quantitative traits over a range of effect sizes and minor allele frequencies.
+#' This function uses the 'genpwr' package for calculations and creates a highly customized ggplot.
 #'
-#' @param n_cases Number of cases in the study.
-#' @param n_controls Number of controls in the study.
+#' @param trait_type Character string specifying trait type: "bt" for binary (case-control) or "qt" for quantitative traits. Default: `"bt"`.
+#' @param n_cases Number of cases in the study (required if `trait_type = "bt"`).
+#' @param n_controls Number of controls in the study (required if `trait_type = "bt"`).
+#' @param sd_trait Numeric, standard deviation of the quantitative trait (required if `trait_type = "qt"`).
+#' @param N Numeric, total sample size for quantitative traits (required if `trait_type = "qt"`).
 #' @param maf_levels A numeric vector of Minor Allele Frequencies (MAFs) to test.
 #'   Default: `c(0.01, 0.02, 0.05, 0.10, 0.20, 0.50)`.
 #' @param or_range A numeric vector specifying the sequence of Odds Ratios (ORs) to test.
-#'   Default: `seq(1.01, 2.00, 0.01)`.
+#'   Default: `seq(1.01, 2.00, 0.005)`. Used when `trait_type = "bt"`.
+#' @param effect_size A numeric vector specifying the sequence of effect sizes (beta) to test for quantitative traits.
+#'   Default: `seq(0.01, 0.50, 0.005)`. Used when `trait_type = "qt"`.
 #' @param alpha The significance level (alpha) for the power calculation.
 #'   Default: `5e-8`.
 #' @param plot_title A string for the plot title. Can include newlines (`\\n`).
@@ -29,27 +35,38 @@
 #' @author Zhen Lu <luzh29@mail2.sysu.edu.cn>
 #'
 #' @details
-#' This function automates the process of calculating and visualizing GWAS power.
-#' It highlights the minimum OR required to achieve 80% power for the lowest and
+#' This function automates the process of calculating and visualizing GWAS power for both
+#' binary (case-control) and quantitative traits. For binary traits, it analyzes power across
+#' odds ratios, while for quantitative traits, it analyzes power across effect sizes.
+#' It highlights the minimum OR/effect size required to achieve 80% power for the lowest and
 #' third-lowest MAF levels, adding dashed lines and color-coded labels for clarity.
 #'
 #' @examples
 #' \donttest{
-#'   # Run the power analysis and generate the plot
-#'   power_results <- plot_gwas_power_bt(
+#'   # Binary trait example (case-control)
+#'   power_results_bt <- plot_gwas_power(
+#'     trait_type = "bt",
 #'     n_cases = 4324,
 #'     n_controls = 93945,
 #'     save_plot = FALSE
 #'   )
 #'
-#'   # The plot is saved to tmp_file, and you can also access the ggplot object
-#'   # print(power_results$plot)
-#'   # print(power_results$power_data)
+#'   # Quantitative trait example
+#'   power_results_qt <- plot_gwas_power(
+#'     trait_type = "qt",
+#'     N = 100000,
+#'     sd_trait = 1.0,
+#'     save_plot = FALSE
+#'   )
+#'
+#'   # Access the ggplot object and data
+#'   # print(power_results_bt$plot)
+#'   # print(power_results_bt$power_data)
 #' }
 #'
-#' @rdname plot_gwas_power_bt
+#' @rdname plot_gwas_power
 #' @export
-#' @importFrom data.table as.data.table
+#' @importFrom data.table as.data.table :=
 #' @importFrom genpwr genpwr.calc
 #' @importFrom ggplot2 ggplot aes geom_line scale_color_manual expand_limits
 #'   scale_x_continuous scale_y_continuous labs theme_classic geom_hline
@@ -70,11 +87,15 @@
 #'
 #' The font files are included in the package's inst/extdata directory and are automatically loaded for plotting.
 #'
-plot_gwas_power_bt <- function(
-  n_cases,
-  n_controls,
+plot_gwas_power <- function(
+  trait_type = "bt",
+  n_cases= NULL,
+  n_controls= NULL,
+  sd_trait= NULL,
+  N= NULL,
   maf_levels = c(0.01, 0.02, 0.05, 0.10, 0.20, 0.50),
-  or_range = seq(1.01, 2.00, 0.01),
+  or_range = seq(1.01, 2.00, 0.005),
+  effect_size= seq(0.01, 0.50, 0.005), 
   alpha = 5e-8,
   plot_title = NULL,
   save_plot = TRUE,
@@ -83,6 +104,12 @@ plot_gwas_power_bt <- function(
   height = 9,
   dpi = 600
 ) {
+
+  if (trait_type == "bt" & (is.null(n_cases) | is.null(n_controls))) {
+    stop("For binary traits, please provide n_cases and n_controls.")
+  } else if (trait_type == "qt" & (is.null(sd_trait) | is.null(N))) {
+    stop("For quantitative traits, please provide sd_trait and N.")
+  }
 
   # --- 1. Setup: Fonts and Colors ---
   font_dir <- system.file("extdata", package = "omixVizR")
@@ -103,54 +130,89 @@ plot_gwas_power_bt <- function(
   plot_colors <- ggsci::pal_npg("nrc")(length(maf_levels))
 
   # --- 2. Power Calculation ---
-  total_n <- n_cases + n_controls
-  case_rate <- n_cases / total_n
+  if (trait_type == "bt") {
+    total_n <- n_cases + n_controls
+    case_rate <- n_cases / total_n
 
-  power_data <- genpwr::genpwr.calc(
-    calc = "power", model = "logistic", ge.interaction = NULL,
-    N = total_n, Case.Rate = case_rate, k=NULL,
-    MAF = maf_levels, OR = or_range,
-    Alpha = alpha,
-    True.Model = "Additive", Test.Model = "Additive"
-  )
+    power_data <- genpwr::genpwr.calc(
+      calc = "power", model = "logistic", ge.interaction = NULL,
+      N = total_n, Case.Rate = case_rate, k=NULL,
+      MAF = maf_levels, OR = or_range,
+      Alpha = alpha,
+      True.Model = "Additive", Test.Model = "Additive"
+    )
+  } else if (trait_type == "qt") {
+    power_data <- genpwr::genpwr.calc(
+      calc = "power", model = "linear", ge.interaction = NULL,
+      N = N, sd_y = sd_trait, k=NULL,
+      MAF = maf_levels, ES= effect_size,
+      Alpha = alpha,
+      True.Model = "Additive", Test.Model = "Additive"
+    )
+  }
 
   # --- 3. Data Preparation for Plotting ---
   maf_labels <- paste("MAF =", format(maf_levels))
   power_data$MAF %<>% factor(levels = maf_levels, labels = maf_labels)
 
   # --- 4. Dynamic Calculation for Annotations ---
-  # Find minimum OR for 80% power at specific MAFs for annotations
+  # Find minimum effect size for 80% power at specific MAFs for annotations
+  data.table::setDT(power_data)
+  if (trait_type == "bt") {
+    power_data[, effect_size_value := OR]
+  } else if (trait_type == "qt") {
+    power_data[, effect_size_value := ES]
+  }
   min_or_maf1 <- power_data %>%
-    dplyr::filter(`Power_at_Alpha_5e-08` >= 0.80) %>%
-    dplyr::arrange(MAF, OR) %>%
-    utils::head(1)
+      dplyr::filter(`Power_at_Alpha_5e-08` >= 0.80) %>%
+      dplyr::arrange(MAF, effect_size_value) %>%
+      utils::head(1)
   min_or_maf3 <- power_data %>%
     dplyr::filter(`Power_at_Alpha_5e-08` >= 0.80, MAF == maf_labels[3]) %>%
-    dplyr::arrange(OR) %>%
+    dplyr::arrange(effect_size_value) %>%
     utils::head(1)
 
   # --- 5. Create Plot ---
   # Set default title if not provided
   if (is.null(plot_title)) {
-    plot_title <- sprintf(
-      "Cases / Controls = %s / %s\nGWAS Significance Level = %s",
-      format(n_cases, big.mark = ","),
-      format(n_controls, big.mark = ","),
-      format(alpha, scientific = TRUE)
-    )
+    if (trait_type == "bt") {
+      plot_title <- sprintf(
+        "Cases / Controls = %s / %s\nGWAS Significance Level = %s",
+        format(n_cases, big.mark = ","),
+        format(n_controls, big.mark = ","),
+        format(alpha, scientific = TRUE)
+      )
+    } else if (trait_type == "qt") {
+      plot_title <- sprintf(
+        "Sample Size = %s\nGWAS Significance Level = %s",
+        format(N, big.mark = ","),
+        format(alpha, scientific = TRUE)
+      )
+    }
+  }
+
+  if (trait_type == "qt") {
+    x_axis_label <- bquote("Effect Size (" * beta * ")")
+  } else {
+    x_axis_label <- "Odds Ratio (OR)"
   }
 
   # Define dynamic breaks and labels for the x-axis
-  x_breaks <- sort(unique(c(seq(1.0, 2.0, 0.2), min_or_maf3$OR, min_or_maf1$OR)))
+  if (trait_type == "bt") {
+    x_breaks <- sort(unique(c(seq(1.0, 2.0, 0.2), min_or_maf3$effect_size_value, min_or_maf1$effect_size_value)))
+  } else if (trait_type == "qt") {
+    x_breaks <- sort(unique(c(seq(0, 0.5, 0.1), min_or_maf3$effect_size_value, min_or_maf1$effect_size_value)))
+  }
+  
   x_labels <- function(x) {
     dplyr::case_when(
-      x == min_or_maf3$OR ~ paste0("<span style='color:", plot_colors[3], "'>", sprintf("%.2f", x), "</span>"),
-      x == min_or_maf1$OR ~ paste0("<span style='color:", plot_colors[1], "'>", sprintf("%.2f", x), "</span>"),
+      x == min_or_maf3$effect_size_value ~ paste0("<span style='color:", plot_colors[3], "'>", sprintf("%.2f", x), "</span>"),
+      x == min_or_maf1$effect_size_value ~ paste0("<span style='color:", plot_colors[1], "'>", sprintf("%.2f", x), "</span>"),
       TRUE ~ paste0("<span style='color:black'>", scales::label_number(accuracy = 0.01)(x), "</span>")
     )
   }
 
-  p <- ggplot2::ggplot(power_data, ggplot2::aes(x = OR, y = `Power_at_Alpha_5e-08`)) +
+  p <- ggplot2::ggplot(power_data, ggplot2::aes(x = effect_size_value, y = `Power_at_Alpha_5e-08`)) +
     ggplot2::geom_line(ggplot2::aes(color = MAF), linewidth = 1.28) +
     ggplot2::scale_color_manual(
       values = stats::setNames(plot_colors, levels(power_data$MAF)),
@@ -165,7 +227,7 @@ plot_gwas_power_bt <- function(
       labels = function(x) dplyr::if_else(x == 0, "0", sprintf("%.2f", x))
     ) +
     ggplot2::labs(
-      x = "Odds Ratio (OR)",
+      x = x_axis_label,
       y = "GWAS Statistical Power",
       title = plot_title
     ) +
@@ -174,12 +236,12 @@ plot_gwas_power_bt <- function(
     # Dashed lines for specific ORs
     ggplot2::geom_segment(
       data = min_or_maf3,
-      ggplot2::aes(x = OR, xend = OR, y = 0, yend = 0.80),
+      ggplot2::aes(x = effect_size_value, xend = effect_size_value, y = 0, yend = 0.80),
       linewidth = 0.88, linetype = "dashed", color = plot_colors[3]
     ) +
     ggplot2::geom_segment(
       data = min_or_maf1,
-      ggplot2::aes(x = OR, xend = OR, y = 0, yend = 0.80),
+      ggplot2::aes(x = effect_size_value, xend = effect_size_value, y = 0, yend = 0.80),
       linewidth = 0.88, linetype = "dashed", color = plot_colors[1]
     ) +
     ggplot2::theme(
