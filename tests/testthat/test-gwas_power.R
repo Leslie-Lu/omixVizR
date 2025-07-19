@@ -9,7 +9,7 @@ test_that("plot_gwas_power executes without errors and returns correct structure
         n_cases = 4324,
         n_controls = 93945,
         maf_levels = c(0.01, 0.02, 0.05, 0.10, 0.20, 0.50),
-        or_range = seq(1.01, 2.00, 0.005),
+        or_range = seq(1.01, 2.00, 0.01),
         save_plot = FALSE
     )
   })
@@ -30,10 +30,10 @@ test_that("plot_gwas_power executes without errors and returns correct structure
   # Run the function without saving the plot
   suppressMessages({power_results_qt <- plot_gwas_power(
         trait_type = "qt",
-        sd_trait = 0.5,
-        N = 150000,
+        sd_trait = 0.09365788681305078,
+        N = 10000,
         maf_levels = c(0.01, 0.02, 0.05, 0.10, 0.20, 0.50),
-        effect_size = seq(0.01, 0.50, 0.005),
+        effect_size = seq(0.01, 0.10, 0.001),
         save_plot = FALSE
     )
   })

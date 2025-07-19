@@ -11,8 +11,8 @@ plot_gwas_power(
   sd_trait = NULL,
   N = NULL,
   maf_levels = c(0.01, 0.02, 0.05, 0.1, 0.2, 0.5),
-  or_range = seq(1.01, 2, 0.005),
-  effect_size = seq(0.01, 0.5, 0.005),
+  or_range = seq(1.01, 2, 0.001),
+  effect_size = seq(0.01, 0.3, 0.001),
   alpha = 5e-08,
   plot_title = NULL,
   save_plot = TRUE,
@@ -37,10 +37,10 @@ plot_gwas_power(
 Default: \code{c(0.01, 0.02, 0.05, 0.10, 0.20, 0.50)}.}
 
 \item{or_range}{A numeric vector specifying the sequence of Odds Ratios (ORs) to test.
-Default: \code{seq(1.01, 2.00, 0.005)}. Used when \code{trait_type = "bt"}.}
+Default: \code{seq(1.01, 2.00, 0.001)}. Used when \code{trait_type = "bt"}.}
 
 \item{effect_size}{A numeric vector specifying the sequence of effect sizes (beta) to test for quantitative traits.
-Default: \code{seq(0.01, 0.50, 0.005)}. Used when \code{trait_type = "qt"}.}
+Default: \code{seq(0.01, 0.30, 0.001)}. Used when \code{trait_type = "qt"}.}
 
 \item{alpha}{The significance level (alpha) for the power calculation.
 Default: \code{5e-8}.}
@@ -100,8 +100,10 @@ The font files are included in the package's inst/extdata directory and are auto
   # Quantitative trait example
   power_results_qt <- plot_gwas_power(
     trait_type = "qt",
-    N = 100000,
-    sd_trait = 1.0,
+    sd_trait = 0.09365788681305078,
+    N = 10000,
+    maf_levels = c(0.01, 0.02, 0.05, 0.10, 0.20, 0.50),
+    effect_size = seq(0.01, 0.10, 0.001),
     save_plot = FALSE
   )
 

@@ -13,9 +13,9 @@
 #' @param maf_levels A numeric vector of Minor Allele Frequencies (MAFs) to test.
 #'   Default: `c(0.01, 0.02, 0.05, 0.10, 0.20, 0.50)`.
 #' @param or_range A numeric vector specifying the sequence of Odds Ratios (ORs) to test.
-#'   Default: `seq(1.01, 2.00, 0.005)`. Used when `trait_type = "bt"`.
+#'   Default: `seq(1.01, 2.00, 0.001)`. Used when `trait_type = "bt"`.
 #' @param effect_size A numeric vector specifying the sequence of effect sizes (beta) to test for quantitative traits.
-#'   Default: `seq(0.01, 0.50, 0.005)`. Used when `trait_type = "qt"`.
+#'   Default: `seq(0.01, 0.30, 0.001)`. Used when `trait_type = "qt"`.
 #' @param alpha The significance level (alpha) for the power calculation.
 #'   Default: `5e-8`.
 #' @param plot_title A string for the plot title. Can include newlines (`\\n`).
@@ -54,8 +54,10 @@
 #'   # Quantitative trait example
 #'   power_results_qt <- plot_gwas_power(
 #'     trait_type = "qt",
-#'     N = 100000,
-#'     sd_trait = 1.0,
+#'     sd_trait = 0.09365788681305078,
+#'     N = 10000,
+#'     maf_levels = c(0.01, 0.02, 0.05, 0.10, 0.20, 0.50),
+#'     effect_size = seq(0.01, 0.10, 0.001),
 #'     save_plot = FALSE
 #'   )
 #'
@@ -70,7 +72,7 @@
 #' @importFrom genpwr genpwr.calc
 #' @importFrom ggplot2 ggplot aes geom_line scale_color_manual expand_limits
 #'   scale_x_continuous scale_y_continuous labs theme_classic geom_hline
-#'   geom_segment theme ggsave margin expansion
+#'   geom_segment theme ggsave margin expansion element_text
 #' @importFrom ggtext element_markdown
 #' @importFrom ggsci pal_npg
 #' @importFrom showtext showtext_auto showtext_opts
@@ -94,8 +96,8 @@ plot_gwas_power <- function(
   sd_trait= NULL,
   N= NULL,
   maf_levels = c(0.01, 0.02, 0.05, 0.10, 0.20, 0.50),
-  or_range = seq(1.01, 2.00, 0.005),
-  effect_size= seq(0.01, 0.50, 0.005), 
+  or_range = seq(1.01, 2.00, 0.001),
+  effect_size= seq(0.01, 0.30, 0.001),
   alpha = 5e-8,
   plot_title = NULL,
   save_plot = TRUE,
@@ -192,16 +194,53 @@ plot_gwas_power <- function(
   }
 
   if (trait_type == "qt") {
-    x_axis_label <- bquote("Effect Size (" * beta * ")")
+    x_axis_label <- expression("Effect Size (" * beta * ")")
   } else {
     x_axis_label <- "Odds Ratio (OR)"
   }
 
+  get_axis_step <- function(value) {
+    thresholds <- c(0.5, 1, 2, 3)
+    steps <- c(0.01, 0.1, 0.2, 0.5, 1.0)
+    
+    idx <- findInterval(value, thresholds)+1
+    return(steps[idx])
+  }
+  detect_decimal_places <- function(x) {
+    x_char <- format(x, scientific = FALSE)
+    decimal_places <- sapply(x_char, function(num) {
+      if (grepl("\\.", num)) {
+        decimal_part <- sub(".*\\.", "", num)
+        decimal_part <- sub("0+$", "", decimal_part)
+        nchar(decimal_part)
+      } else {
+        0
+      }
+    })
+    return(max(decimal_places))
+  }
+
   # Define dynamic breaks and labels for the x-axis
   if (trait_type == "bt") {
-    x_breaks <- sort(unique(c(seq(1.0, 2.0, 0.2), min_or_maf3$effect_size_value, min_or_maf1$effect_size_value)))
+    min_eff <- floor(min(as.numeric(or_range), na.rm = TRUE))
+    max_eff <- ceiling(max(as.numeric(or_range), na.rm = TRUE))
+    eff_range <- max(or_range) - min(or_range)
+    by_eff= get_axis_step(eff_range)
+    x_breaks <- sort(unique(c(seq(min_eff, max_eff, ifelse(by_eff==0.01, 0.1, by_eff)), min_or_maf3$effect_size_value, min_or_maf1$effect_size_value)))
+    decimal_places= detect_decimal_places(max(or_range))
+    multiplier <- 10^decimal_places
+    max_limit=  ceiling(max(or_range) * multiplier) / multiplier
+    xaxis_limit= c(min_eff, max_limit)
   } else if (trait_type == "qt") {
-    x_breaks <- sort(unique(c(seq(0, 0.5, 0.1), min_or_maf3$effect_size_value, min_or_maf1$effect_size_value)))
+    min_eff <- floor(min(as.numeric(effect_size), na.rm = TRUE))
+    max_eff <- ceiling(max(as.numeric(effect_size), na.rm = TRUE))
+    eff_range <- max(effect_size) - min(effect_size)
+    by_eff= get_axis_step(eff_range)
+    x_breaks <- sort(unique(c(seq(min_eff, max_eff, ifelse(by_eff==0.01, 0.1, by_eff)), min_or_maf3$effect_size_value, min_or_maf1$effect_size_value)))
+    decimal_places= detect_decimal_places(max(effect_size))
+    multiplier <- 10^decimal_places
+    max_limit=  ceiling(max(effect_size) * multiplier) / multiplier
+    xaxis_limit= c(min_eff, max_limit)
   }
   
   x_labels <- function(x) {
@@ -219,7 +258,7 @@ plot_gwas_power <- function(
       name = "Minor Allele Frequency (MAF)",
       guide = ggplot2::guide_legend(override.aes = list(linewidth = 2.8))
     ) +
-    ggplot2::expand_limits(x = c(1.00, 2.00), y = c(0, 1)) +
+    ggplot2::expand_limits(x = xaxis_limit, y = c(0, 1)) +
     ggplot2::scale_x_continuous(breaks = x_breaks, labels = x_labels) +
     ggplot2::scale_y_continuous(
       breaks = seq(0, 1.0, 0.2),
@@ -255,6 +294,9 @@ plot_gwas_power <- function(
       plot.title.position = "plot",
       plot.margin = ggplot2::margin(t = 15, r = 10, b = 10, l = 10, unit = "pt")
     )
+  if (trait_type == "qt"){
+    p= p + ggplot2::theme(axis.title.x = ggplot2::element_text(family = "sans", face = "bold"))
+  }
 
   # --- 6. Save Plot (if requested) ---
   if (save_plot) {
