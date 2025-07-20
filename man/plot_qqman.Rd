@@ -25,7 +25,7 @@ plot_qqman(
 
 \item{save_plot}{Logical, whether to save plots to files. If FALSE, plots are only displayed. Default: TRUE}
 
-\item{lambda1_qq_pos}{A numeric vector of length 2 specifying the \code{c(hjust, vjust)} for the lambda (λ) text in the QQ plot. Default: \code{c(2.1, -5.5)}.}
+\item{lambda1_qq_pos}{A numeric vector of length 2 specifying the \code{c(hjust, vjust)} for the lambda text in the QQ plot. Default: \code{c(2.1, -5.5)}.}
 
 \item{lambda2_qq_pos}{A numeric vector of length 2 specifying the \code{c(hjust, vjust)} for the SNP count (N) text in the QQ plot. Default: \code{c(1.565, -4.0)}.}
 }

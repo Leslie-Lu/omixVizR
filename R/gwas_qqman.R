@@ -5,7 +5,7 @@
 #' @param maf_filter Minor allele frequency filter, Default: NULL
 #' @param output_graphics Output graphics format, Default: 'png'
 #' @param save_plot Logical, whether to save plots to files. If FALSE, plots are only displayed. Default: TRUE
-#' @param lambda1_qq_pos A numeric vector of length 2 specifying the `c(hjust, vjust)` for the lambda (λ) text in the QQ plot. Default: `c(2.1, -5.5)`.
+#' @param lambda1_qq_pos A numeric vector of length 2 specifying the `c(hjust, vjust)` for the lambda text in the QQ plot. Default: `c(2.1, -5.5)`.
 #' @param lambda2_qq_pos A numeric vector of length 2 specifying the `c(hjust, vjust)` for the SNP count (N) text in the QQ plot. Default: `c(1.565, -4.0)`.
 #' @return A list containing the ggplot objects for the Manhattan and QQ plots.
 #' @author Zhen Lu <luzh29@mail2.sysu.edu.cn>
