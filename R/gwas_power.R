@@ -18,8 +18,8 @@
 #'   Default: `seq(0.01, 0.30, 0.001)`. Used when `trait_type = "qt"`.
 #' @param alpha The significance level (alpha) for the power calculation.
 #'   Default: `5e-8`.
-#' @param plot_title A string for the plot title. Can include newlines (`\\n`).
-#'   Default: A title generated from case/control numbers.
+#' @param plot_title A string for the plot title.
+#'   Default: `Cases / Controls` for binary traits or `Sample Size` for quantitative traits.
 #' @param save_plot Logical, whether to save the plot to a file. If `FALSE`, the
 #'   plot object is only returned. Default: `TRUE`.
 #' @param output_graphics The file format for saving the plot. Currently supports
@@ -191,6 +191,25 @@ plot_gwas_power <- function(
         format(alpha, scientific = TRUE)
       )
     }
+  } else {
+    if (trait_type == "bt") {
+      plot_title= sprintf(
+        paste(
+          plot_title, "= %s / %s\nGWAS Significance Level = %s"
+        ),
+        format(n_cases, big.mark = ","),
+        format(n_controls, big.mark = ","),
+        format(alpha, scientific = TRUE)
+      )
+    } else if( trait_type == "qt") {
+      plot_title= sprintf(
+        paste(
+          plot_title, "= %s\nGWAS Significance Level = %s"
+        ),
+        format(N, big.mark = ","),
+        format(alpha, scientific = TRUE)
+      )
+    }
   }
 
   if (trait_type == "qt") {
@@ -201,9 +220,9 @@ plot_gwas_power <- function(
 
   get_axis_step <- function(value) {
     thresholds <- c(0.5, 1, 2, 3)
-    steps <- c(0.01, 0.1, 0.2, 0.5, 1.0)
+    steps <- c(0.1, 0.2, 0.5, 1.0, 1.5)
     
-    idx <- findInterval(value, thresholds)+1
+    idx <- findInterval(value, thresholds) + 1
     return(steps[idx])
   }
   detect_decimal_places <- function(x) {

@@ -45,8 +45,8 @@ Default: \code{seq(0.01, 0.30, 0.001)}. Used when \code{trait_type = "qt"}.}
 \item{alpha}{The significance level (alpha) for the power calculation.
 Default: \code{5e-8}.}
 
-\item{plot_title}{A string for the plot title. Can include newlines (\verb{\\\\n}).
-Default: A title generated from case/control numbers.}
+\item{plot_title}{A string for the plot title.
+Default: \code{Cases / Controls} for binary traits or \verb{Sample Size} for quantitative traits.}
 
 \item{save_plot}{Logical, whether to save the plot to a file. If \code{FALSE}, the
 plot object is only returned. Default: \code{TRUE}.}
