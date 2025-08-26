@@ -8,6 +8,8 @@ plot_qqman(
   plink_assoc_file,
   pheno_name,
   maf_filter = NULL,
+  gwas_threshold = 5e-08,
+  label_col = "SNP",
   output_graphics = "png",
   save_plot = TRUE,
   lambda1_qq_pos = c(2.1, -5.5),
@@ -20,6 +22,10 @@ plot_qqman(
 \item{pheno_name}{Phenotype name.}
 
 \item{maf_filter}{Minor allele frequency filter, Default: NULL}
+
+\item{gwas_threshold}{The significance threshold for highlighting SNPs. Default: \code{5e-8}.}
+
+\item{label_col}{The name of the column to use for labeling significant SNPs. Default: \code{"SNP"}.}
 
 \item{output_graphics}{Output graphics format, Default: 'png'}
 

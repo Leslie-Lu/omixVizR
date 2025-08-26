@@ -3,6 +3,8 @@
 #' @param plink_assoc_file Path to the PLINK association file.
 #' @param pheno_name Phenotype name.
 #' @param maf_filter Minor allele frequency filter, Default: NULL
+#' @param gwas_threshold The significance threshold for highlighting SNPs. Default: `5e-8`.
+#' @param label_col The name of the column to use for labeling significant SNPs. Default: `"SNP"`.
 #' @param output_graphics Output graphics format, Default: 'png'
 #' @param save_plot Logical, whether to save plots to files. If FALSE, plots are only displayed. Default: TRUE
 #' @param lambda1_qq_pos A numeric vector of length 2 specifying the `c(hjust, vjust)` for the lambda text in the QQ plot. Default: `c(2.1, -5.5)`.
@@ -59,6 +61,8 @@ plot_qqman = function(
   plink_assoc_file,
   pheno_name,
   maf_filter = NULL,
+  gwas_threshold = 5e-8,
+  label_col = "SNP",
   output_graphics = "png",
   save_plot = TRUE,
   lambda1_qq_pos = c(2.1, -5.5),
@@ -82,6 +86,9 @@ plot_qqman = function(
   required_cols <- c("CHR", "BP", "P")
   if (!all(required_cols %in% colnames(gwasresults))) {
     stop("The input file must contain columns named 'CHR', 'BP', and 'P'.")
+  }
+  if (!label_col %in% colnames(gwasresults)) {
+    stop(paste0("The specified label column '", label_col, "' does not exist in the input file."))
   }
   gwasresults[, BP := as.numeric(BP)]
   gwasresults[, P := as.numeric(P)]
@@ -130,7 +137,10 @@ plot_qqman = function(
   }
 
   # Manhattan plot
-  plotData <- plotData[, highlight := data.table::fifelse(P <= 5e-8, "yes", "no", "no")][
+  dat3[, CHR:= as.character(CHR)] %>%
+      .[CHR == "23", CHR := "X"] %>%
+      .[CHR == "24", CHR := "Y"]
+  plotData <- plotData[, highlight := data.table::fifelse(P <= gwas_threshold, "yes", "no", "no")][
     !is.na(SNP) & !is.na(P) & is.finite(-log10(P)),
   ]
 
@@ -152,9 +162,12 @@ plot_qqman = function(
   }
   gap_vec <- find_empty_y(-log10(plotData$P), binwidth = 30, min_empty_bins = 3)
 
+  label_data <- plotData %>%
+    .[highlight == "yes" & !is.na(get(label_col)) & get(label_col) != ".", ]
+
   plot_manhattan <- ggplot2::ggplot(plotData) +
     ggplot2::geom_point(ggplot2::aes(x = xaxis, y = -log10(P), color = as.factor(CHR)), size = 0.2) +
-    ggplot2::geom_hline(yintercept = -log10(5e-8), color = "#DC0000FF", linetype = 2) +
+    ggplot2::geom_hline(yintercept = -log10(gwas_threshold), color = "#DC0000FF", linetype = 2) +
     ggplot2::scale_x_continuous(breaks = dat3$xlabBP, labels = dat3$CHR, expand = c(0.01, 0)) +
     ggplot2::scale_y_continuous(expand = c(0, 0), limits = c(0, fig_ylim),
       breaks = function(limits) {
@@ -164,9 +177,12 @@ plot_qqman = function(
     ) +
     ggplot2::geom_point(data = plotData[highlight == "yes", ], ggplot2::aes(x = xaxis, y = -log10(P)), color = "#D55E00", size = 0.5) +
     ggrepel::geom_text_repel(
-      data = plotData[highlight == "yes", ],
-      ggplot2::aes(x = xaxis, y = -log10(P), label = SNP), color = "#D55E00", size = 6, nudge_y = 1.0, fontface = "italic",
+      data = label_data,
+      ggplot2::aes(x = xaxis, y = -log10(P), label = .data[[label_col]]), color = "#D55E00", size = 4, nudge_y = 1.25, fontface = "italic",
       max.overlaps = 20,
+      box.padding = 0.5,
+      point.padding = 0.5,
+      segment.size = 0.2,
       segment.color = "#D55E00" # #009E73
     ) +
     ggplot2::scale_color_manual(values = rep(c("#3B5488", "#53BBD5"), 12)) +
