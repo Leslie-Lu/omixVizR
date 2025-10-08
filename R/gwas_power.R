@@ -83,9 +83,7 @@
 #' @importFrom utils head
 #' @importFrom stats setNames
 #' @section Font Information:
-#' The MetroSans font included in this package is sourced from
-#' \url{https://fontshub.pro/font/metro-sans-download#google_vignette}.
-#' It is intended for academic research and non-commercial use only. For commercial use, please contact the font copyright holder.
+#' The MetroSans font included in this package is intended for academic research and non-commercial use only. For commercial use, please contact the font copyright holder.
 #'
 #' The font files are included in the package's inst/extdata directory and are automatically loaded for plotting.
 #'

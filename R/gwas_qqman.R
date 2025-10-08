@@ -34,8 +34,6 @@
 #'     message("Sample file not found, skipping example.")
 #'   }
 #' }
-#' @seealso
-#'  \href{https://CRAN.R-project.org/package=lulab.utils}{lulab.utils}
 #' @rdname plot_qqman
 #' @export
 #' @importFrom data.table fread .N := shift fifelse
@@ -52,9 +50,7 @@
 #' @importFrom graphics hist
 #' @importFrom stats median qbeta qnorm
 #' @section Font Information:
-#' The MetroSans font included in this package is sourced from
-#' \url{https://fontshub.pro/font/metro-sans-download#google_vignette}.
-#' It is intended for academic research and non-commercial use only. For commercial use, please contact the font copyright holder.
+#' The MetroSans font included in this package is intended for academic research and non-commercial use only. For commercial use, please contact the font copyright holder.
 #'
 #' The font files are included in the package's inst/extdata directory and are automatically loaded for plotting.
 plot_qqman = function(

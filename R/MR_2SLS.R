@@ -1,67 +1,3 @@
-#' @title round2
-#' @description Round a number to a specified number of decimal places.
-#' @param x The numeric input to be rounded.
-#' @param digits The number of decimal places to round to, Default: digits
-#' @return The rounded numeric value.
-#' @details This function rounds the input number to the specified number of decimal places.
-#' @rdname round2
-round2 = function(x, digits = digits) {
-  posneg = sign(x)
-  z = abs(x)*10^digits
-  z = z + 0.5 + sqrt(.Machine$double.eps)
-  z = trunc(z)
-  z = z/10^digits
-  return(z*posneg)
-}
-
-#' @title extract_results
-#' @description Extract results from a fitted model.
-#' @param model The fitted logistic model object.
-#' @param markers_name A character vector of marker names.
-#' @param n_independent_metabolites The number of independent metabolites.
-#' @param digits The number of decimal places to round to.
-#' @param effective_size A numeric vector containing effective sample sizes.
-#' @param case_size The number of cases.
-#' @param control_size The number of controls.
-#' @param outcome_name The name of the outcome variable.
-#' @return A named vector containing the extracted results.
-#' @details This function extracts relevant results from a fitted logistic model and formats them for reporting.
-#' @rdname extract_results
-extract_results = function(model,
-                           markers_name,
-                           n_independent_metabolites,
-                           digits,
-                           effective_size,
-                           case_size,
-                           control_size,
-                           outcome_name){
-  x = summary(model)
-  biomarker = markers_name[rev(dimnames(x$coefficients)[[1]])[1]]
-  p.value = rev(x$coefficients[,"Pr(>|z|)"])[1]
-  BonferroniSignificance = ifelse(p.value < 0.05/n_independent_metabolites, "Yes", "No")
-  p_value_scientific = formatC(p.value, format = "e", digits = 2)
-  wald.test = round2(rev(x$coefficients[,"z value"])[1], digits= digits)
-  BETA = round2(rev(x$coefficients[,"Estimate"])[1], digits= digits)
-  SE = round2(rev(x$coefficients[,"Std. Error"])[1], digits= digits)
-  OR  = round2(exp(rev(x$coefficients[,"Estimate"])[1]), digits= digits)
-  OR.confint.lower = round2(exp(c(BETA-qnorm(0.975)*SE)), digits= digits)
-  OR.confint.upper = round2(exp(c(BETA+qnorm(0.975)*SE)), digits= digits)
-  OR_formatted_digits = paste("%." , digits, "f", sep="")
-  OR_formatted = paste0(sprintf(OR_formatted_digits, OR), " (", sprintf(OR_formatted_digits, OR.confint.lower), ", ", sprintf(OR_formatted_digits, OR.confint.upper), ")")
-  sample_size = effective_size[[rev(dimnames(x$coefficients)[[1]])[1]]]
-  case_n = case_size
-  control_n = control_size
-  outcome_name= outcome_name
-  res = c(biomarker, outcome_name, sample_size, case_n, control_n, BETA, SE, OR_formatted, p_value_scientific, BonferroniSignificance, wald.test, p.value, OR, OR.confint.lower, OR.confint.upper)
-  names(res) = c(
-    "Metabolite", "Outcome", "Sample size", "Cases", "Controls", "Beta", "SE", "Odds ratio (95% CI)", "P value",
-    sprintf("Significant with a Bonferroni correction (0.05/%d=%s)", n_independent_metabolites, formatC(0.05/n_independent_metabolites, format = "e", digits = 2)),
-    "Wald test",
-    "Raw P value", "OR", "OR.confint.lower", "OR.confint.upper"
-  )
-  return(res)
-}
-
 #' @title MR_2SLS
 #' @description Perform Two-Stage Least Squares (2SLS) Mendelian Randomization analysis.
 #' @param infile The input file containing the data.
@@ -227,7 +163,7 @@ MR_2SLS = function(infile, outcome, outcome_name, prs_cols_match, regexpr_patter
   }
   univariate_mr_results = purrr::map(
     markers_prs_keep,
-    ~ extract_results(
+    ~ lulab.utils::extract_logistic_model(
       univariate_mr_model(.x),
       markers_name,
       n_independent_metabolites,

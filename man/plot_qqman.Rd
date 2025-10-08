@@ -46,9 +46,7 @@ This function reads a PLINK association file and generates Manhattan and QQ plot
 }
 \section{Font Information}{
 
-The MetroSans font included in this package is sourced from
-\url{https://fontshub.pro/font/metro-sans-download#google_vignette}.
-It is intended for academic research and non-commercial use only. For commercial use, please contact the font copyright holder.
+The MetroSans font included in this package is intended for academic research and non-commercial use only. For commercial use, please contact the font copyright holder.
 
 The font files are included in the package's inst/extdata directory and are automatically loaded for plotting.
 }
@@ -72,9 +70,6 @@ The font files are included in the package's inst/extdata directory and are auto
     message("Sample file not found, skipping example.")
   }
 }
-}
-\seealso{
-\href{https://CRAN.R-project.org/package=lulab.utils}{lulab.utils}
 }
 \author{
 Zhen Lu \href{mailto:luzh29@mail2.sysu.edu.cn}{luzh29@mail2.sysu.edu.cn}
