@@ -2,7 +2,7 @@
 % Please edit documentation in R/gwas_power.R
 \name{plot_gwas_power}
 \alias{plot_gwas_power}
-\title{Plot GWAS Statistical Power}
+\title{plot_gwas_power}
 \usage{
 plot_gwas_power(
   trait_type = "bt",

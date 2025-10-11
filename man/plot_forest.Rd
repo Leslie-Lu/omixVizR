@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_forest.R
 \name{plot_forest}
 \alias{plot_forest}
-\title{Create a forest plot column in a table}
+\title{plot_forest}
 \usage{
 plot_forest(
   p_left_data,
@@ -127,4 +127,10 @@ image
 }
 \description{
 Creates a forest plot overlaid on a table.
+}
+\details{
+This function creates a forest plot overlaid on a table. It is highly customizable, allowing for adjustments to fonts, colors, and layout.
+}
+\author{
+Zhen Lu \href{mailto:luzh29@mail2.sysu.edu.cn}{luzh29@mail2.sysu.edu.cn}
 }

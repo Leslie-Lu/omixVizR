@@ -1,7 +1,6 @@
-#' Create a forest plot column in a table
-#'
-#' Creates a forest plot overlaid on a table.
-#'
+#' @title plot_forest
+#' @description Creates a forest plot overlaid on a table.
+#' @author Zhen Lu <luzh29@mail2.sysu.edu.cn>
 #' @param p_left_data Data frame (required). The information to be displayed to the left of the forest plot.
 #' @param point_estimate Vector. The point estimates to be displayed in the forest plot.
 #' @param ci_lower_bound Vector. The lower confidence bounds.
@@ -42,6 +41,8 @@
 #' @param table_theme A gridExtra table theme. If specified, overwrites all table theme customization in other options. The default is a modified version of ttheme_minimal.
 #'
 #' @return image
+#' @details This function creates a forest plot overlaid on a table. It is highly customizable, allowing for adjustments to fonts, colors, and layout.
+#' @rdname plot_forest
 #' @importFrom rlang .data
 #' @importFrom graphics text
 #' @export
@@ -576,7 +577,7 @@ plot_forest <- function(p_left_data,
     )
 
     if (display == TRUE) {
-      system(paste0('open "', filename, '"'))
+      invisible(system(paste0('open "', filename, '"')))
     }
   }else{
     final

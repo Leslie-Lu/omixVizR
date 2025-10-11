@@ -1,4 +1,4 @@
-#' @title Plot GWAS QQ and Manhattan Plots
+#' @title plot_qqman
 #' @description Create GWAS QQ & Manhattan Plots.
 #' @param plink_assoc_file Path to the PLINK association file.
 #' @param pheno_name Phenotype name.

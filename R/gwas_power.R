@@ -1,10 +1,11 @@
-#' @title Plot GWAS Statistical Power
+#' @title plot_gwas_power
 #' @description
 #' Generates a statistical power analysis plot for GWAS studies.
 #' Supports binary (case-control) traits over a range of odds ratios and minor allele frequencies,
 #' and quantitative traits over a range of effect sizes and minor allele frequencies.
 #' This function uses the 'genpwr' package for calculations and creates a highly customized ggplot.
 #'
+#' @author Zhen Lu <luzh29@mail2.sysu.edu.cn>
 #' @param trait_type Character string specifying trait type: "bt" for binary (case-control) or "qt" for quantitative traits. Default: `"bt"`.
 #' @param n_cases Number of cases in the study (required if `trait_type = "bt"`).
 #' @param n_controls Number of controls in the study (required if `trait_type = "bt"`).
@@ -31,8 +32,6 @@
 #' @return A list containing two elements:
 #'   \item{plot}{The ggplot object for the power plot.}
 #'   \item{power_data}{A data.table containing the full results from the power analysis.}
-#'
-#' @author Zhen Lu <luzh29@mail2.sysu.edu.cn>
 #'
 #' @details
 #' This function automates the process of calculating and visualizing GWAS power for both

@@ -1,5 +1,7 @@
 #' @title MR_2SLS
 #' @description Perform Two-Stage Least Squares (2SLS) Mendelian Randomization analysis.
+#' @author Zhen Lu <luzh29@mail2.sysu.edu.cn>
+#' @author Siyang Liu <liusy99@mail.sysu.edu.cn>
 #' @param infile The input file containing the data.
 #' @param outcome The outcome variable.
 #' @param outcome_name The name of the outcome variable.

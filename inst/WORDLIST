@@ -30,6 +30,7 @@ ggplot
 ggsave
 ggsci
 gridExtra
+gwas
 jpeg
 liusy
 liuyh
@@ -44,6 +45,7 @@ png
 proteomics
 prs
 ps
+qqman
 standardise
 svg
 sysu

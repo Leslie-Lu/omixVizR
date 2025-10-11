@@ -49,3 +49,8 @@ This function performs a Two-Stage Least Squares (2SLS) Mendelian Randomization 
 \code{\link[Matrix]{nearPD}}
 \code{\link[corpcor]{cov.shrink}}
 }
+\author{
+Zhen Lu \href{mailto:luzh29@mail2.sysu.edu.cn}{luzh29@mail2.sysu.edu.cn}
+
+Siyang Liu \href{mailto:liusy99@mail.sysu.edu.cn}{liusy99@mail.sysu.edu.cn}
+}
