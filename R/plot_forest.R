@@ -298,7 +298,11 @@ plot_forest <- function(p_left_data,
   )
   font_adj <- 0.3 + h_adj + log(nrow(gdata)) * slope_adj
   y_low <- -.5 + font_adj + -.1381 * log(nrow(gdata))
-  y_high <- 1.017 * nrow(gdata) - 0.6
+  y_high_calculated <- 1.017 * nrow(gdata) - 0.6
+  y_high = max(y_high_calculated, 3)
+  y_high_added = y_high - y_high_calculated
+  row_num_added = y_high_added/5.2
+  gdata$row_num = gdata$row_num + row_num_added
 
   #### add shapes and sizes to gdata ########
   gdata$shape <- point_shapes
@@ -405,10 +409,11 @@ plot_forest <- function(p_left_data,
 
   ######################## Arrows ##############################
   if (arrows == TRUE) {
+    arrows_height_added = row_num_added*3.2
     # this df has the text labels
     xlab_df <- data.frame(text = arrow_labels,
                           x = xlim,
-                          y = c(0, 0) + arrow_nudge_y,
+                          y = c(0, 0) + arrow_nudge_y - row_num_added/2,
                           hjust = c(0, 1))
     a_small_amount <- abs(xlim[1] - xlim[2])/35
 
@@ -417,12 +422,12 @@ plot_forest <- function(p_left_data,
       arrow_df <- data.frame(id = c(1,2),
                            xstart = c(null_line_at - a_small_amount, null_line_at + a_small_amount),
                            xend = c(xlim[1] + a_small_amount, xlim[2] - a_small_amount),
-                           y = c(1, 1) + arrow_nudge_y)
+                           y = c(1, 1) + arrow_nudge_y - arrows_height_added)
     }else{
       arrow_df <- data.frame(id = c(1,2),
                              xstart = c(null_line_at - a_small_amount, null_line_at + a_small_amount),
                              xend = c(xlim[1], xlim[2]),
-                             y = c(1, 1) + arrow_nudge_y)
+                             y = c(1, 1) + arrow_nudge_y - arrows_height_added)
     }
     # create the arrow/label ggplot object
     arrows_plot <- ggplot2::ggplot() +
@@ -457,7 +462,8 @@ plot_forest <- function(p_left_data,
 
   ######### using patchwork, overlay the ggplot on the table ###################
   png_width <- total_width/10 + nudge_x
-  png_height <- (nrow(gdata) + 3)/3.8
+  png_height_calculated <- (nrow(gdata) + 3)/3.8
+  png_height <- max(png_height_calculated, 2)
   if (is.null(add_plot)) {
     table_final <- mono_column(gridExtra::tableGrob(tdata_print, theme = theme, rows = NULL), ncol(p_left_data) + 1, font_family)
 
