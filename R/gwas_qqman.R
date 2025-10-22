@@ -161,6 +161,7 @@ plot_qqman = function(
   label_data <- plotData %>%
     .[highlight == "yes" & !is.na(get(label_col)) & get(label_col) != ".", ]
 
+  y_axis_label_manhattan = expression("-log<sub>10</sub>(*P*)")
   plot_manhattan <- ggplot2::ggplot(plotData) +
     ggplot2::geom_point(ggplot2::aes(x = xaxis, y = -log10(P), color = as.factor(CHR)), size = 0.2) +
     ggplot2::geom_hline(yintercept = -log10(gwas_threshold), color = "#DC0000FF", linetype = 2) +
@@ -191,7 +192,7 @@ plot_qqman = function(
       strip.text = ggplot2::element_blank(),
       panel.grid.major = ggplot2::element_blank(),
       panel.grid.minor = ggplot2::element_blank(),
-      axis.text = ggplot2::element_text(size = 13, face = "bold"),
+      axis.text = ggtext::element_markdown(size = 13, face = "bold"),
       axis.title = ggtext::element_markdown(size = 16.5, face = "bold"),
       axis.ticks.length = grid::unit(0.12, "cm"),
       axis.line = ggplot2::element_line(linewidth = 0.5),
@@ -203,7 +204,7 @@ plot_qqman = function(
     ) +
     ggplot2::labs(
       x = "Chromosome",
-      y = "-log<sub>10</sub>(<i>P</i>)"
+      y = y_axis_label_manhattan
     )
 
   if (!is.null(gap_vec)) {
@@ -244,6 +245,9 @@ plot_qqman = function(
     label2 = paste0("N[italic(SNP)] == ", N)
   )
 
+  x_axis_label = expression("Expected -log<sub>10</sub>(*P*)")
+  y_axis_label = expression("Observed -log<sub>10</sub>(*P*)")
+
   plot_qq <- ggplot2::ggplot(qqPlotData) +
     ggplot2::geom_point(ggplot2::aes(x = x, y = y), size = 0.2) +
     ggplot2::geom_text(
@@ -274,14 +278,14 @@ plot_qqman = function(
       aspect.ratio = 1,
       panel.grid.major = ggplot2::element_blank(),
       panel.grid.minor = ggplot2::element_blank(),
-      axis.text = ggplot2::element_text(size = 13, face = "bold"),
+      axis.text = ggtext::element_markdown(size = 13, face = "bold"),
       axis.title = ggtext::element_markdown(size = 16.5, face = "bold"),
       axis.ticks.length = grid::unit(0.09, "cm"),
       panel.border = ggplot2::element_rect(fill = NA, color = "black")
     ) +
     ggplot2::labs(
-      x = "Expected -log<sub>10</sub>(<i>P</i>)",
-      y = "Observed -log<sub>10</sub>(<i>P</i>)"
+      x = x_axis_label,
+      y = y_axis_label
     ) +
     ggplot2::scale_x_continuous(expand = c(0, 0), limits = c(0, fig_ylim)) +
     ggplot2::scale_y_continuous(expand = c(0, 0), limits = c(0, fig_ylim)) +
