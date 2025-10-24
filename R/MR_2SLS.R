@@ -3,6 +3,8 @@
 #' @author Zhen Lu <luzh29@mail2.sysu.edu.cn>
 #' @author Siyang Liu <liusy99@mail.sysu.edu.cn>
 #' @param infile The input file containing the data.
+#' @param proteins_data The file containing the proteins data actually measured for the samples.
+#' @param proteins_measured The name vector of proteins actually measured for the samples.
 #' @param outcome The outcome variable.
 #' @param outcome_name The name of the outcome variable.
 #' @param prs_cols_match The columns to match for PRS.
@@ -27,13 +29,20 @@
 #' @importFrom stringr str_extract
 #' @importFrom Matrix nearPD
 #' @importFrom corpcor cor.shrink
-MR_2SLS = function(infile, outcome, outcome_name, prs_cols_match, regexpr_pattern, standardise = TRUE, digits = 3, .progress= TRUE) {
+#' @references 
+#' Chen, Y., Lu, T., Pettersson-Kymmer, U., Stewart, I. D., Butler-Laporte, G., Nakanishi, T., Cerani, A., Liang, K. Y. H., Yoshiji, S., Willett, J. D. S., Su, C.-Y., Raina, P., Greenwood, C. M. T., Farjoun, Y., Forgetta, V., Langenberg, C., Zhou, S., Ohlsson, C., & Richards, J. B. (2023). Genomic atlas of the plasma metabolome prioritizes metabolites implicated in human diseases. Nature Genetics, 55(1), 44–53. https://doi.org/10.1038/s41588-022-01270-1
+MR_2SLS = function(infile, proteins_data, proteins_measured, outcome, outcome_name, prs_cols_match, regexpr_pattern, standardise = TRUE, digits = 3, .progress= TRUE) {
   message("Part1: Read and prepare the data...")
   data = if (is.character(infile)) {
     data.table::fread(infile, header = TRUE, stringsAsFactors = FALSE)
     } else {
     data.table::as.data.table(infile)
     }
+  proteins_data = if(is.character(proteins_data)) {
+    data.table::fread(proteins_data, header = TRUE, stringsAsFactors = FALSE)
+  } else {
+    data.table::as.data.table(proteins_data)
+  }
   markers_prs= data %>% dplyr::select(dplyr::contains(prs_cols_match)) %>% colnames()
   markers = purrr::map_chr(markers_prs, ~ stringr::str_extract(.x, regexpr_pattern))
   markers_prs_v2 = gsub("-", "_", markers_prs, fixed = TRUE)
@@ -55,8 +64,8 @@ MR_2SLS = function(infile, outcome, outcome_name, prs_cols_match, regexpr_patter
   message("Part2: Calculate the effective number of indepedent metabolites...")
   resid_scale = function(biomarker){
     idx = grepl("-", biomarker, fixed = TRUE)
-    other_cols= union(setdiff(colnames(data), c(markers_prs, outcome)), biomarker)
-    covars_data= data[, .SD, .SDcols = other_cols]
+    other_cols= union(setdiff(colnames(proteins_data), c(proteins_measured, outcome)), biomarker)
+    covars_data= proteins_data[, .SD, .SDcols = other_cols]
     old_col_names = colnames(covars_data)
     new_col_names = gsub("-", "_", old_col_names, fixed = TRUE)
     data.table::setnames(covars_data, old_col_names, new_col_names)
@@ -75,11 +84,11 @@ MR_2SLS = function(infile, outcome, outcome_name, prs_cols_match, regexpr_patter
     return(znorm(z))
   }
   resid_results = purrr::map(
-    markers_prs,
+    proteins_measured,
     ~ resid_scale(.x),
     .progress = .progress
   ) %>% do.call(cbind, .) %>% as.data.frame()
-  names(resid_results) = markers_prs
+  names(resid_results) = proteins_measured
   message("The dimension of residuals matrix is: ", dim(resid_results)[1], " x ", dim(resid_results)[2])
 
   message("Checking the correlation matrix of residuals...")
@@ -91,9 +100,9 @@ MR_2SLS = function(infile, outcome, outcome_name, prs_cols_match, regexpr_patter
   keep = nz_sd & enoughN_inf
   if (sum(keep) >= 2) {
     message(paste0("Removing ", sum(!keep), " metabolites with zero standard deviation or insufficient non-missing/non-infinite values."))
-    message("The removed metabolites are: ", paste(markers_prs[!keep], collapse = ", "))
+    message("The removed metabolites are: ", paste(proteins_measured[!keep], collapse = ", "))
     data.table::setDT(resid_results)
-    resid_results[, (markers_prs[!keep]) := NULL]
+    resid_results[, (proteins_measured[!keep]) := NULL]
     message("The new dimension of residuals matrix is: ", dim(resid_results)[1], " x ", dim(resid_results)[2])
   } else {
     stop("Not enough metabolites with non-zero standard deviation and sufficient non-missing/non-infinite values.")
@@ -128,7 +137,7 @@ MR_2SLS = function(infile, outcome, outcome_name, prs_cols_match, regexpr_patter
   })
 
   n_independent_metabolites = ((sum(eig)^2) / sum(eig^2)) %>% ceiling()
-  message(paste0("The number of independent metabolites is ", n_independent_metabolites, " among ", length(markers_prs), " metabolites."))
+  message(paste0("The number of independent metabolites is ", n_independent_metabolites, " among ", length(proteins_measured), " metabolites."))
 
   ## --- Stage 2 of Two stage least square (2SLS) estimation of MR ---
   message("Part3: Perform stage 2 of Two stage least square (2SLS) estimation of MR...")

@@ -6,6 +6,8 @@
 \usage{
 MR_2SLS(
   infile,
+  proteins_data,
+  proteins_measured,
   outcome,
   outcome_name,
   prs_cols_match,
@@ -17,6 +19,10 @@ MR_2SLS(
 }
 \arguments{
 \item{infile}{The input file containing the data.}
+
+\item{proteins_data}{The file containing the proteins data actually measured for the samples.}
+
+\item{proteins_measured}{The name vector of proteins actually measured for the samples.}
 
 \item{outcome}{The outcome variable.}
 
@@ -40,6 +46,9 @@ Perform Two-Stage Least Squares (2SLS) Mendelian Randomization analysis.
 }
 \details{
 This function performs a Two-Stage Least Squares (2SLS) Mendelian Randomization analysis.
+}
+\references{
+Chen, Y., Lu, T., Pettersson-Kymmer, U., Stewart, I. D., Butler-Laporte, G., Nakanishi, T., Cerani, A., Liang, K. Y. H., Yoshiji, S., Willett, J. D. S., Su, C.-Y., Raina, P., Greenwood, C. M. T., Farjoun, Y., Forgetta, V., Langenberg, C., Zhou, S., Ohlsson, C., & Richards, J. B. (2023). Genomic atlas of the plasma metabolome prioritizes metabolites implicated in human diseases. Nature Genetics, 55(1), 44–53. https://doi.org/10.1038/s41588-022-01270-1
 }
 \seealso{
 \code{\link[data.table]{fread}}, \code{\link[data.table]{as.data.table}}, \code{\link[data.table]{setattr}}, \code{\link[data.table]{setDT}}
