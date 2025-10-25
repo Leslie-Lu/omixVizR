@@ -100,13 +100,14 @@ MR_2SLS = function(infile, proteins_data, proteins_measured, outcome, outcome_na
   keep = nz_sd & enoughN_inf
   if (sum(keep) >= 2) {
     message(paste0("Removing ", sum(!keep), " metabolites with zero standard deviation or insufficient non-missing/non-infinite values."))
-    message("The removed metabolites are: ", paste(proteins_measured[!keep], collapse = ", "))
+    if (sum(!keep) > 0) message("The removed metabolites are: ", paste(proteins_measured[!keep], collapse = ", "))
     data.table::setDT(resid_results)
     resid_results[, (proteins_measured[!keep]) := NULL]
     message("The new dimension of residuals matrix is: ", dim(resid_results)[1], " x ", dim(resid_results)[2])
   } else {
     stop("Not enough metabolites with non-zero standard deviation and sufficient non-missing/non-infinite values.")
   }
+
   message("Imputate missing values or infinite values with column medians...")
   resid_results_imputed = purrr::map(resid_results, ~ {
     x = .x
@@ -141,13 +142,23 @@ MR_2SLS = function(infile, proteins_data, proteins_measured, outcome, outcome_na
 
   ## --- Stage 2 of Two stage least square (2SLS) estimation of MR ---
   message("Part3: Perform stage 2 of Two stage least square (2SLS) estimation of MR...")
-  purrr::walk(markers_prs[!keep], ~ {
+
+  message("Checking the PRS data...")
+  PRS_data = data[, .SD, .SDcols = markers_prs]
+  message("The raw dimension of PRS data matrix is: ", dim(data)[1], " x ", dim(data)[2])
+  if (purrr::map_lgl(PRS_data, ~ all(is.numeric(.x))) %>% all() == FALSE) {
+    stop("Non-numeric values found in PRS data matrix.")
+  }
+  nz_sd_prs = purrr::map_lgl(PRS_data, ~ sd(.x, na.rm = TRUE) > 0) # number of zero-sd columns
+  enoughN_inf_prs = purrr::map_lgl(PRS_data, ~ count_valid(.x) > 3) # number of columns with enough non-infinite values
+  keep_prs = nz_sd_prs & enoughN_inf_prs
+  purrr::walk(markers_prs[!keep_prs], ~ {
     message("The removed metabolite is: ", .x, " due to zero standard deviation or insufficient non-missing/non-infinite values.")
     print(table(data[[.x]], useNA = "always"))
   })
-  data[, (markers_prs[!keep]) := NULL]
+  data[, (markers_prs[!keep_prs]) := NULL]
   message("The new dimension of data matrix is: ", dim(data)[1], " x ", dim(data)[2])
-  markers_prs_keep = markers_prs[keep]
+  markers_prs_keep = markers_prs[keep_prs]
   if(standardise){
     data[, (markers_prs_keep) := lapply(.SD, znorm), .SDcols=markers_prs_keep]
   }
