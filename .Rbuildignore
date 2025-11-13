@@ -1,3 +1,5 @@
+^renv$
+^renv\.lock$
 ^omixVizR\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
